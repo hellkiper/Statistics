@@ -267,9 +267,9 @@ function renderMatches(matchesData = null) {
     .join('');
 }
 
-async function handleSearch() {
+async function handleSearch(sessionUser = null) {
   const input = document.getElementById('steamIdInput');
-  const steamId = parseSteamId(input?.value);
+  const steamId = parseSteamId(input?.value) || sessionUser?.steamId;
   const faceitNick = document.getElementById('faceitNickInput')?.value?.trim();
 
   if (!steamId && !faceitNick) {
@@ -287,20 +287,28 @@ async function handleSearch() {
   let maps = [];
   let lastErrorReason = null;
 
+  const fallbackFromSession = sessionUser ? {
+    personaname: sessionUser.name,
+    avatarfull: sessionUser.avatar,
+    avatar: sessionUser.avatar,
+    steamid: sessionUser.steamId || steamId
+  } : null;
+
   if (steamId) {
     const [statsRes, summary] = await Promise.all([
       fetchPlayerStats(steamId),
       fetchPlayerSummary(steamId),
     ]);
     lastErrorReason = statsRes?.reason;
-    playerInfo = summary || { personaname: 'Player', steamid: steamId };
+    playerInfo = summary || fallbackFromSession || { personaname: 'Игрок', steamid: steamId };
     if (statsRes.success && statsRes.data) {
       stats = formatStats(statsRes.data, summary);
       stats.steamId = steamId;
       weapons = stats.weapons || [];
       maps = stats.maps || [];
-    } else if (summary) {
-      stats = { ...EMPTY_STATS, steamId, hoursPlayed: summary.game_hours || 0 };
+    } else if (summary || fallbackFromSession) {
+      const p = summary || fallbackFromSession;
+      stats = { ...EMPTY_STATS, steamId, hoursPlayed: p?.game_hours || 0 };
     }
   }
 
@@ -309,7 +317,10 @@ async function handleSearch() {
     const faceitRes = await fetchFaceitStatsAll(steamId || undefined, faceitNick || undefined);
     if (faceitRes.success) {
       if (!playerInfo) playerInfo = { nickname: faceitRes.player?.nickname, avatar: faceitRes.player?.avatar };
-      else if (faceitRes.player?.avatar) playerInfo.avatar = faceitRes.player.avatar;
+      else {
+        if (faceitRes.player?.avatar) playerInfo.avatar = faceitRes.player.avatar;
+        if (faceitRes.player?.nickname) playerInfo.nickname = faceitRes.player.nickname;
+      }
       const faceitStats = faceitRes.cs2 || faceitRes.csgo;
       if (faceitStats) {
         stats = formatFaceitStatsFromRaw(faceitStats.stats || {}, faceitStats.game);
@@ -337,15 +348,12 @@ async function handleSearch() {
       apiHint.style.display = '';
     }
     document.getElementById('faceitSearchWrap')?.style.setProperty('display', '');
-    renderOverview(stats || { ...EMPTY_STATS, steamId }, playerInfo);
+    if (!stats) stats = { ...EMPTY_STATS, steamId };
+    renderOverview(stats, playerInfo || fallbackFromSession);
     renderWeapons([]);
     renderMaps([]);
     const list = document.getElementById('matchesList');
     if (list) renderMatches([]);
-    if (playerInfo) {
-      const av = document.getElementById('playerAvatar');
-      if (av && (playerInfo.avatarfull || playerInfo.avatar)) av.src = playerInfo.avatarfull || playerInfo.avatar;
-    }
   }
 }
 
@@ -393,7 +401,7 @@ async function initStats() {
     const data = await res.json();
     if (data.loggedIn && data.user?.steamId) {
       input.value = data.user.steamId;
-      await handleSearch();
+      await handleSearch(data.user);
       return;
     }
   } catch (e) {}

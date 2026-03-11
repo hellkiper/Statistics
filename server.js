@@ -74,19 +74,23 @@ app.get('/auth/logout', (req, res) => {
   req.logout(() => res.redirect('/'));
 });
 
-app.get('/api/me', (req, res) => {
-  if (req.isAuthenticated()) {
-    res.json({
-      loggedIn: true,
-      user: {
-        steamId: req.user.steamId,
-        name: req.user.name,
-        avatar: req.user.avatar
+app.get('/api/me', async (req, res) => {
+  if (!req.isAuthenticated()) return res.json({ loggedIn: false });
+  let user = { steamId: req.user.steamId, name: req.user.name, avatar: req.user.avatar };
+  if (STEAM_API_KEY) {
+    try {
+      const r = await fetch(
+        `https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=${STEAM_API_KEY}&steamids=${req.user.steamId}`
+      );
+      const data = await r.json();
+      const p = data?.response?.players?.[0];
+      if (p) {
+        user.name = p.personaname || user.name;
+        user.avatar = p.avatarfull || p.avatarmedium || p.avatar || user.avatar;
       }
-    });
-  } else {
-    res.json({ loggedIn: false });
+    } catch (e) {}
   }
+  res.json({ loggedIn: true, user });
 });
 
 app.get('/api/stats', async (req, res) => {
