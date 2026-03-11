@@ -9,6 +9,18 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const BASE_URL = process.env.BASE_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
 
+app.set('trust proxy', 1);
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && (origin.includes('render.com') || origin.includes('github.io') || origin.startsWith('http://localhost'))) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  if (req.method === 'OPTIONS') return res.sendStatus(200);
+  next();
+});
+
 // Steam API ключ — получи на https://steamcommunity.com/dev/apikey
 const STEAM_API_KEY = process.env.STEAM_API_KEY || '';
 
@@ -38,7 +50,11 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'sakura-cs2-secret-change-in-production',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: process.env.NODE_ENV === 'production' }
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 30 * 24 * 60 * 60 * 1000
+  }
 }));
 app.use(passport.initialize());
 app.use(passport.session());
