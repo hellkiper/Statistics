@@ -3,21 +3,27 @@
   const authContainer = document.getElementById('auth-container');
   if (!authContainer) return;
 
+  const API_BASE = (typeof window !== 'undefined' && window.API_BASE) ||
+    (window.location.hostname.includes('github.io') ? 'https://statistics-gm7c.onrender.com' : '');
+  const base = (path) => (path.startsWith('http') ? path : `${API_BASE}${path}`);
+
   function updateUI(data) {
     if (data.loggedIn && data.user) {
       authContainer.innerHTML = `
-        <div class="auth-user">
+        <div class="auth-user-block">
           <img src="${data.user.avatar || 'https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg'}" alt="" class="auth-avatar">
           <span class="auth-name">${escapeHtml(data.user.name)}</span>
-          <a href="/auth/logout" class="auth-logout">Выйти</a>
+          <a href="${base('/auth/logout')}" class="auth-logout">Выйти</a>
         </div>
       `;
     } else {
       authContainer.innerHTML = `
-        <a href="/auth/steam" class="auth-steam-btn">
-          <img src="https://steamcommunity-a.akamaihd.net/public/images/signinthroughsteam/sits_01.png" alt="Steam" class="auth-steam-img">
-          Войти через Steam
-        </a>
+        <div class="auth-btns">
+          <a href="${base('/auth/steam')}" class="btn-hero btn-auth-reg">Регистрация</a>
+          <a href="${base('/auth/steam')}" class="auth-steam-btn" title="Войти через Steam">
+            <img src="https://store.steampowered.com/favicon.ico" alt="Steam" class="auth-steam-logo">
+          </a>
+        </div>
       `;
     }
   }
@@ -28,10 +34,17 @@
     return div.innerHTML;
   }
 
-  fetch('/api/me')
+  fetch(base('/api/me'), { credentials: 'include' })
     .then(r => r.json())
     .then(updateUI)
     .catch(() => {
-      authContainer.style.display = 'none';
+      authContainer.innerHTML = `
+        <div class="auth-btns">
+          <a href="${base('/auth/steam')}" class="btn-hero btn-auth-reg">Регистрация</a>
+          <a href="${base('/auth/steam')}" class="auth-steam-btn" title="Войти через Steam">
+            <img src="https://store.steampowered.com/favicon.ico" alt="Steam" class="auth-steam-logo">
+          </a>
+        </div>
+      `;
     });
 })();

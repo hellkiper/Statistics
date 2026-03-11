@@ -103,14 +103,11 @@ body {
 .auth-steam-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.4rem 0.8rem;
-  background: var(--text-dark);
-  color: var(--pink);
-  font-weight: 600;
-  font-size: 0.85rem;
+  justify-content: center;
+  padding: 0.4rem;
+  background: transparent;
+  color: inherit;
   text-decoration: none;
-  border-radius: 6px;
   transition: opacity 0.2s;
 }
 
@@ -118,11 +115,35 @@ body {
   opacity: 0.9;
 }
 
-.auth-steam-img {
-  height: 24px;
+.auth-steam-logo {
+  width: 28px;
+  height: 28px;
+  display: block;
 }
 
-.auth-user {
+.auth-btns {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.auth-btns .btn-auth-reg {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: var(--text-dark);
+  color: var(--pink);
+  border: none;
+  border-radius: 50px;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.auth-btns .btn-auth-reg:hover {
+  opacity: 0.9;
+}
+
+.auth-user-block {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -132,6 +153,10 @@ body {
   width: 28px;
   height: 28px;
   border-radius: 4px;
+}
+
+.auth-user-block .auth-avatar {
+  border-radius: 6px;
 }
 
 .auth-name {
@@ -152,6 +177,65 @@ body {
 
 .auth-logout:hover {
   opacity: 1;
+}
+
+/* Hero — блок авторизации справа вверху */
+.hero-auth-block {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  z-index: 10;
+}
+
+.auth-hero .auth-btns {
+  background: var(--text-dark);
+  padding: 0.35rem 0.5rem 0.35rem 1rem;
+  border-radius: 50px;
+}
+
+.auth-hero .auth-btns .btn-auth-reg {
+  background: transparent;
+  color: var(--text);
+}
+
+.auth-hero .auth-btns .btn-auth-reg:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.auth-hero .auth-steam-btn {
+  padding: 0.35rem;
+}
+
+.auth-hero .auth-steam-logo {
+  width: 36px;
+  height: 36px;
+}
+
+.auth-hero .auth-user-block {
+  background: var(--text-dark);
+  padding: 0.35rem 0.5rem 0.35rem 1rem;
+  border-radius: 50px;
+}
+
+.auth-hero .auth-user-block .auth-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+}
+
+.auth-hero .auth-user-block .auth-name {
+  font-size: 1rem;
+  max-width: 160px;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.auth-hero .auth-user-block .auth-logout {
+  color: rgba(255, 255, 255, 0.7);
+  margin-left: 0.25rem;
+}
+
+.auth-hero .auth-user-block .auth-logout:hover {
+  color: #fff;
 }
 
 /* Hero секция */
