@@ -269,9 +269,25 @@ function renderMatches(matchesData = null) {
 
 async function handleSearch(sessionUser = null) {
   const input = document.getElementById('steamIdInput');
-  const steamId = parseSteamId(input?.value) || sessionUser?.steamId;
+  let steamId = parseSteamId(input?.value) || sessionUser?.steamId;
   const faceitNick = document.getElementById('faceitNickInput')?.value?.trim();
 
+  if (!sessionUser && !steamId && !faceitNick) {
+    renderEmpty();
+    return;
+  }
+
+  if (!sessionUser) {
+    try {
+      const r = await apiFetch('/api/me');
+      const d = await r.json();
+      if (d.loggedIn && d.user) sessionUser = d.user;
+    } catch (e) {}
+  }
+  if (sessionUser?.steamId && !steamId) {
+    steamId = sessionUser.steamId;
+    if (input) input.value = steamId;
+  }
   if (!steamId && !faceitNick) {
     renderEmpty();
     return;
