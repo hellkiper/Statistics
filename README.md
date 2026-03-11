@@ -20,11 +20,27 @@
 
 На главной и внутренних страницах — белые овальные кнопки в стиле Sakura (`btn-hero`).
 
-## GitHub Pages
+## Деплой с авторизацией через Steam (Render)
+
+**Регистрация через Steam работает на Render** — там запускается Node.js сервер.
+
+1. Зайди на [render.com](https://render.com), зарегистрируйся через GitHub
+2. New → Web Service → подключи репозиторий `hellkiper/Statistics`
+3. Environment → добавь:
+   - `STEAM_API_KEY` — твой ключ с [steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey)
+   - `BASE_URL` — оставь пустым (Render подставит URL сам)
+4. Deploy
+5. После деплоя — зайди в настройки Steam API ключа и добавь домен вида `https://твой-сервис.onrender.com`
+
+Сайт будет по ссылке вида `https://sakura-cs2-xxx.onrender.com` — там работает вход через Steam и реальная статистика.
+
+## GitHub Pages (статическая версия)
 
 Сайт деплоится автоматически при пуше в `main`. URL: **https://hellkiper.github.io/Statistics/**
 
 **Настройки:** Repo → Settings → Pages → Source: **GitHub Actions**
+
+> На GitHub Pages только статика — без входа через Steam. Для авторизации используй Render (см. выше).
 
 ## Запуск локально
 
@@ -41,11 +57,7 @@ npm start
 
 ## Реальные данные (Steam API)
 
-1. Получите API ключ: [steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey)
-2. Откройте `script.js` и вставьте ключ в переменную `STEAM_API_KEY`
-3. Введите Steam ID или URL профиля в поле поиска
-
-> **Примечание:** Steam API возвращает только базовую статистику (ISteamUserStats). Для матчей и детальной аналитики потребуется сторонний API (например, [SteamWebAPI](https://www.steamwebapi.com/)).
+Ключ хранится в `.env` (локально) или в Environment на Render. Статистика подгружается через API прокси на сервере.
 
 ## Steam-авторизация
 

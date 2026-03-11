@@ -7,7 +7,7 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+const BASE_URL = process.env.BASE_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
 
 // Steam API ключ — получи на https://steamcommunity.com/dev/apikey
 const STEAM_API_KEY = process.env.STEAM_API_KEY || '';
@@ -68,6 +68,39 @@ app.get('/api/me', (req, res) => {
     });
   } else {
     res.json({ loggedIn: false });
+  }
+});
+
+app.get('/api/stats', async (req, res) => {
+  const steamId = req.query.steamid;
+  if (!steamId || !STEAM_API_KEY) {
+    return res.json({ success: false });
+  }
+  try {
+    const r = await fetch(
+      `https://api.steampowered.com/ISteamUserStats/GetUserStatsForGame/v2/?appid=730&key=${STEAM_API_KEY}&steamid=${steamId}`
+    );
+    const data = await r.json();
+    res.json(data.playerstats ? { success: true, data: data.playerstats } : { success: false });
+  } catch (e) {
+    res.json({ success: false });
+  }
+});
+
+app.get('/api/player', async (req, res) => {
+  const steamId = req.query.steamid;
+  if (!steamId || !STEAM_API_KEY) {
+    return res.json(null);
+  }
+  try {
+    const r = await fetch(
+      `https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=${STEAM_API_KEY}&steamids=${steamId}`
+    );
+    const data = await r.json();
+    const player = data?.response?.players?.[0] || null;
+    res.json(player);
+  } catch (e) {
+    res.json(null);
   }
 });
 

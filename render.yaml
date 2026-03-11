@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: sakura-cs2
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: STEAM_API_KEY
+        sync: false
+      - key: BASE_URL
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true

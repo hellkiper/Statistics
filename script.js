@@ -55,34 +55,22 @@ function parseSteamId(input) {
   return str;
 }
 
-// API ключ Steam (добавьте в .env или настройте)
-const STEAM_API_KEY = ''; // Получить на https://steamcommunity.com/dev/apikey
-
 async function fetchPlayerStats(steamId) {
-  if (!STEAM_API_KEY) {
-    return { success: false, demo: true };
-  }
   try {
-    const res = await fetch(
-      `https://api.steampowered.com/ISteamUserStats/GetUserStatsForGame/v2/?appid=730&key=${STEAM_API_KEY}&steamid=${steamId}`
-    );
+    const res = await fetch(`/api/stats?steamid=${encodeURIComponent(steamId)}`);
     const data = await res.json();
-    if (data.playerstats) return { success: true, data: data.playerstats };
-    return { success: false };
+    if (data.success) return { success: true, data: data.data };
+    return { success: false, demo: true };
   } catch (err) {
     console.error(err);
-    return { success: false };
+    return { success: false, demo: true };
   }
 }
 
 async function fetchPlayerSummary(steamId) {
-  if (!STEAM_API_KEY) return null;
   try {
-    const res = await fetch(
-      `https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=${STEAM_API_KEY}&steamids=${steamId}`
-    );
-    const data = await res.json();
-    const player = data?.response?.players?.[0];
+    const res = await fetch(`/api/player?steamid=${encodeURIComponent(steamId)}`);
+    const player = await res.json();
     return player || null;
   } catch (err) {
     console.error(err);
