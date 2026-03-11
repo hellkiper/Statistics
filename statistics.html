@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Статистика | Sakura CS2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="statistics">
+  <nav class="nav">
+    <div class="nav-inner">
+      <div class="nav-left">
+        <a href="calendar.html" class="nav-link">Календарь</a>
+        <a href="statistics.html" class="nav-link">Статистика</a>
+        <a href="grenades.html" class="nav-link">Гранаты</a>
+        <a href="maps.html" class="nav-link">Предматчевая аналитика</a>
+      </div>
+      <a href="sakura.html" class="nav-link nav-sakura">SAKURA</a>
+      <div class="nav-right">
+        <a href="tactics.html" class="nav-link">Тактическая доска</a>
+        <a href="sets.html" class="nav-link">Собери сет</a>
+        <a href="giveaway.html" class="nav-link">Розыгрыш</a>
+        <a href="videos.html" class="nav-link">Sakura Videos</a>
+        <div id="auth-container" class="auth-container"></div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main">
+    <section class="page-header">
+      <h1>Статистика</h1>
+      <p>Анализ твоей игры в Counter-Strike 2</p>
+      <div class="page-header-buttons">
+        <a href="matches.html" class="btn-hero">история матчей</a>
+        <a href="index.html" class="btn-hero btn-hero-outline">на главную</a>
+      </div>
+    </section>
+
+    <section class="section section-dark">
+      <div class="search-bar">
+        <input type="text" id="steamIdInput" placeholder="Steam ID / Steam URL..." class="search-input">
+        <button id="searchBtn" class="btn-search">Поиск</button>
+      </div>
+
+      <div class="player-card">
+        <div class="player-avatar">
+          <img id="playerAvatar" src="https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg" alt="Avatar">
+          <div class="player-rank">MG2</div>
+        </div>
+        <div class="player-info">
+          <h2 id="playerName">Игрок</h2>
+          <p class="player-id">Steam ID: <span id="playerSteamId">—</span></p>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card highlight">
+          <span class="stat-label">Убийств</span>
+          <span class="stat-value" id="statKills">0</span>
+        </div>
+        <div class="stat-card highlight">
+          <span class="stat-label">Смертей</span>
+          <span class="stat-value" id="statDeaths">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">K/D</span>
+          <span class="stat-value" id="statKD">0.00</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Точность в голову</span>
+          <span class="stat-value" id="statHeadshots">0%</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Победы</span>
+          <span class="stat-value" id="statWins">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Часы в игре</span>
+          <span class="stat-value" id="statHours">0</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-pink-alt">
+      <h2 class="section-title-dark">Статистика оружия</h2>
+      <div class="weapons-grid" id="weaponsGrid"></div>
+    </section>
+
+    <section class="section section-dark">
+      <h2 class="section-title">Статистика по картам</h2>
+      <div class="maps-grid" id="mapsGrid"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>SAKURA CS2 • Steam Web API • App ID: 730</p>
+  </footer>
+
+  <script src="nav.js"></script>
+  <script src="auth.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

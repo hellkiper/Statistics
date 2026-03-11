@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sakura CS2 | Стань лучшим в CS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="home">
+  <!-- Навигация -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <div class="nav-left">
+        <a href="calendar.html" class="nav-link">Календарь</a>
+        <a href="statistics.html" class="nav-link">Статистика</a>
+        <a href="grenades.html" class="nav-link">Гранаты</a>
+        <a href="maps.html" class="nav-link">Предматчевая аналитика</a>
+      </div>
+      <a href="sakura.html" class="nav-link nav-sakura">SAKURA</a>
+      <div class="nav-right">
+        <a href="tactics.html" class="nav-link">Тактическая доска</a>
+        <a href="sets.html" class="nav-link">Собери сет</a>
+        <a href="giveaway.html" class="nav-link">Розыгрыш</a>
+        <a href="videos.html" class="nav-link">Sakura Videos</a>
+        <div id="auth-container" class="auth-container"></div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero секция (только на главной) -->
+  <header class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+      <div class="hero-text">
+        <span class="hero-label">SAKURA CS2</span>
+        <h1>Стань лучшим в CS</h1>
+        <p>Мы предоставим всю статистику и поможем развить твой скилл</p>
+        <div class="hero-buttons">
+          <a href="statistics.html" class="btn-hero">статистика</a>
+          <a href="matches.html" class="btn-hero">история матчей</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Розовая секция "О нас" -->
+  <section class="section-pink">
+    <div class="section-pink-inner">
+      <h2 class="section-pink-title">SAKURA</h2>
+      <p class="section-pink-text">
+        Всё необходимое для прокачки скилла — на нашем сайте. Заходи, смотри статистику перед игрой, анализируй ошибки, учи новые гранаты, планируй тактики, изучай соперников перед матчем. Участвуй в турнирах, выигрывай призы, собирай сет мечты и смотри любимых блогеров.
+      </p>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>SAKURA CS2 • Steam Web API • App ID: 730</p>
+  </footer>
+
+  <a href="#" class="scroll-top" id="scrollTop" aria-label="Наверх">↑</a>
+
+  <script src="nav.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    (function() {
+      var btn = document.getElementById('scrollTop');
+      if (!btn) return;
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+      function checkScroll() {
+        var scrolled = window.scrollY;
+        var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        if (docHeight > 100 && scrolled >= docHeight - 50) {
+          btn.classList.add('visible');
+        } else {
+          btn.classList.remove('visible');
+        }
+      }
+      window.addEventListener('scroll', checkScroll);
+      checkScroll();
+    })();
+  </script>
+</body>
+</html>
