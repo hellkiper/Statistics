@@ -22,10 +22,9 @@
 
 ## GitHub Pages
 
-Сайт деплоится автоматически при пуше в `main`. После настройки будет доступен по адресу:
-**https://hellkiper.github.io/Statistics/**
+Сайт деплоится автоматически при пуше в `main`. URL: **https://hellkiper.github.io/Statistics/**
 
-Настройки: Repo → Settings → Pages → Source: Deploy from a branch → Branch: `gh-pages`.
+**Настройки:** Repo → Settings → Pages → Source: **GitHub Actions**
 
 ## Запуск локально
 
