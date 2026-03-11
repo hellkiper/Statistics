@@ -93,11 +93,17 @@ app.get('/api/player', async (req, res) => {
     return res.json(null);
   }
   try {
-    const r = await fetch(
-      `https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=${STEAM_API_KEY}&steamids=${steamId}`
-    );
-    const data = await r.json();
-    const player = data?.response?.players?.[0] || null;
+    const [sumRes, gamesRes] = await Promise.all([
+      fetch(`https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=${STEAM_API_KEY}&steamids=${steamId}`),
+      fetch(`https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=${STEAM_API_KEY}&steamid=${steamId}&appids_filter[0]=730&include_played_free_games=1`)
+    ]);
+    const sumData = await sumRes.json();
+    const gamesData = await gamesRes.json();
+    const player = sumData?.response?.players?.[0] || null;
+    const csGame = gamesData?.response?.games?.[0];
+    if (player && csGame?.playtime_forever) {
+      player.game_hours = Math.round(csGame.playtime_forever / 60);
+    }
     res.json(player);
   } catch (e) {
     res.json(null);

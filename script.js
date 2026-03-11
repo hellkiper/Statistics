@@ -1,47 +1,49 @@
-// Демо-данные (замените на Steam API)
-const DEMO_STATS = {
-  name: 'Demo Player',
-  steamId: '76561198123456789',
-  avatar: 'https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg',
-  kills: 12450,
-  deaths: 10230,
-  headshotPercent: 42,
-  wins: 892,
-  totalRounds: 2100,
-  hoursPlayed: 1247,
+const EMPTY_STATS = {
+  kills: 0,
+  deaths: 0,
+  headshotPercent: 0,
+  wins: 0,
+  totalRounds: 0,
+  matches: 0,
+  assists: 0,
+  mvp: 0,
+  hoursPlayed: 0,
+  weapons: [],
+  maps: []
 };
 
-const WEAPONS = [
-  { name: 'AK-47', kills: 4521, icon: '🔫' },
-  { name: 'M4A4', kills: 3120, icon: '🔫' },
-  { name: 'AWP', kills: 2156, icon: '🎯' },
-  { name: 'Desert Eagle', kills: 892, icon: '🔫' },
-  { name: 'USP-S', kills: 654, icon: '🔫' },
-  { name: 'Glock-18', kills: 521, icon: '🔫' },
-  { name: 'P250', kills: 423, icon: '🔫' },
-  { name: 'MP9', kills: 312, icon: '🔫' },
-  { name: 'FAMAS', kills: 287, icon: '🔫' },
-  { name: 'Galil AR', kills: 234, icon: '🔫' },
-];
-
-const MAPS = [
-  { name: 'de_dust2', wins: 156, losses: 98, rounds: 254 },
-  { name: 'de_mirage', wins: 134, losses: 102, rounds: 236 },
-  { name: 'de_inferno', wins: 98, losses: 87, rounds: 185 },
-  { name: 'de_nuke', wins: 67, losses: 72, rounds: 139 },
-  { name: 'de_overpass', wins: 89, losses: 91, rounds: 180 },
-  { name: 'de_ancient', wins: 72, losses: 78, rounds: 150 },
-  { name: 'de_vertigo', wins: 54, losses: 61, rounds: 115 },
-  { name: 'de_anubis', wins: 48, losses: 52, rounds: 100 },
-];
-
-const MATCHES = [
-  { map: 'de_dust2', score: '16-14', kda: '24/18/5', win: true, date: '2 ч назад' },
-  { map: 'de_mirage', score: '13-16', kda: '19/22/3', win: false, date: '5 ч назад' },
-  { map: 'de_inferno', score: '16-11', kda: '28/15/8', win: true, date: 'Вчера' },
-  { map: 'de_nuke', score: '14-16', kda: '21/20/4', win: false, date: 'Вчера' },
-  { map: 'de_overpass', score: '16-9', kda: '26/12/6', win: true, date: '2 дня назад' },
-];
+const WEAPON_NAMES = {
+  ak47: 'AK-47',
+  m4a1: 'M4A1',
+  m4a1_silencer: 'M4A1-S',
+  awp: 'AWP',
+  deagle: 'Desert Eagle',
+  usp_silencer: 'USP-S',
+  glock: 'Glock-18',
+  p250: 'P250',
+  mp9: 'MP9',
+  famas: 'FAMAS',
+  galilar: 'Galil AR',
+  elite: 'Dual Berettas',
+  fiveseven: 'Five-SeveN',
+  tec9: 'Tec-9',
+  mac10: 'MAC-10',
+  mp7: 'MP7',
+  ump45: 'UMP-45',
+  p90: 'P90',
+  ppbizon: 'PP-Bizon',
+  nova: 'Nova',
+  xm1014: 'XM1014',
+  mag7: 'MAG-7',
+  sawedoff: 'Sawed-Off',
+  negev: 'Negev',
+  m249: 'M249',
+  ssg08: 'SSG 08',
+  scar20: 'SCAR-20',
+  g3sg1: 'G3SG1',
+  hkp2000: 'P2000',
+  revolver: 'R8 Revolver'
+};
 
 // Извлечение Steam ID из URL или прямой ID
 function parseSteamId(input) {
@@ -78,126 +80,179 @@ async function fetchPlayerSummary(steamId) {
   }
 }
 
-function formatStats(rawStats) {
-  if (!rawStats?.stats) return DEMO_STATS;
-  const stats = Object.fromEntries(rawStats.stats.map((s) => [s.name, s.value]));
-  const totalKills = stats.total_kills ?? 0;
-  const totalDeaths = stats.total_deaths_other ?? 0;
-  const headshots = stats.total_headshot_kills ?? 0;
-  const wins = stats.total_wins ?? 0;
-  const rounds = stats.total_rounds_played ?? 0;
+function formatStats(rawStats, playerInfo = null) {
+  if (!rawStats?.stats) return { ...EMPTY_STATS };
+  const s = Object.fromEntries(rawStats.stats.map((x) => [x.name, x.value]));
+  const totalKills = s.total_kills ?? 0;
+  const totalDeaths = s.total_deaths_other ?? 0;
+  const headshots = s.total_headshot_kills ?? 0;
+  const wins = s.total_wins ?? 0;
+  const rounds = s.total_rounds_played ?? 0;
+  const assists = s.total_kills_assist ?? s.total_kills_assists ?? 0;
+  const mvp = s.total_mvps ?? s.total_mvp ?? 0;
+
+  const weapons = [];
+  for (const [key, val] of Object.entries(s)) {
+    const m = key.match(/^total_kills_(.+)$/);
+    if (m && val > 0) {
+      const id = m[1].toLowerCase();
+      weapons.push({ name: WEAPON_NAMES[id] || id.toUpperCase(), kills: val });
+    }
+  }
+  weapons.sort((a, b) => b.kills - a.kills);
+
+  const maps = [];
+  for (const [key, val] of Object.entries(s)) {
+    const m = key.match(/^total_wins_map_(.+)$/);
+    if (m && val > 0) {
+      const mapId = m[1];
+      const roundsKey = `total_rounds_map_${mapId}`;
+      const mapRounds = s[roundsKey] ?? val * 2;
+      const losses = Math.max(0, mapRounds - val);
+      maps.push({ name: mapId.replace('de_', ''), wins: val, losses, rounds: mapRounds });
+    }
+  }
+  maps.sort((a, b) => b.wins - a.wins);
+
+  const matches = Math.ceil(rounds / 24) || 0;
+
   return {
     kills: totalKills,
     deaths: totalDeaths,
     headshotPercent: totalKills > 0 ? Math.round((headshots / totalKills) * 100) : 0,
     wins,
     totalRounds: rounds,
-    hoursPlayed: 0, // Steam profile separate
+    matches,
+    assists,
+    mvp,
+    hoursPlayed: playerInfo?.game_hours ?? 0,
+    weapons: weapons.slice(0, 12),
+    maps: maps.slice(0, 10)
   };
 }
 
 function renderOverview(stats, playerInfo = null) {
+  const m = stats.matches ?? Math.ceil((stats.totalRounds || 0) / 24) || 0;
   const kd = stats.deaths > 0 ? (stats.kills / stats.deaths).toFixed(2) : '0.00';
-  const ids = ['statKills', 'statDeaths', 'statKD', 'statHeadshots', 'statWins', 'statHours'];
-  const vals = [stats.kills, stats.deaths, kd, stats.headshotPercent + '%', stats.wins, stats.hoursPlayed || 0];
+  const winrate = m > 0 ? Math.round((stats.wins / m) * 100) : 0;
+  const ids = ['statMatches', 'statKills', 'statDeaths', 'statKD', 'statHeadshots', 'statWins', 'statWinrate', 'statAssists', 'statMVP', 'statHours'];
+  const vals = [m, stats.kills, stats.deaths, kd, (stats.headshotPercent || 0) + '%', stats.wins, winrate + '%', stats.assists || 0, stats.mvp || 0, stats.hoursPlayed || 0];
   ids.forEach((id, i) => {
     const el = document.getElementById(id);
     if (el) el.textContent = typeof vals[i] === 'number' ? vals[i].toLocaleString() : vals[i];
   });
   const nameEl = document.getElementById('playerName');
-  if (nameEl) nameEl.textContent = playerInfo?.personaname || stats.name;
+  if (nameEl) nameEl.textContent = playerInfo?.personaname || stats.name || 'Игрок';
   const steamEl = document.getElementById('playerSteamId');
-  if (steamEl) steamEl.textContent = playerInfo?.steamid || stats.steamId;
+  if (steamEl) steamEl.textContent = playerInfo?.steamid || stats.steamId || '—';
   const avatarEl = document.getElementById('playerAvatar');
-  if (avatarEl && (playerInfo?.avatarfull || stats.avatar)) avatarEl.src = playerInfo?.avatarfull || stats.avatar;
+  if (avatarEl && (playerInfo?.avatarfull || playerInfo?.avatar || stats.avatar)) {
+    avatarEl.src = playerInfo?.avatarfull || playerInfo?.avatar || stats.avatar;
+  }
 }
 
-function renderWeapons() {
+function renderWeapons(weaponsData = null) {
   const grid = document.getElementById('weaponsGrid');
   if (!grid) return;
-  grid.innerHTML = WEAPONS.map(
-    (w) => `
+  const list = weaponsData?.length > 0 ? weaponsData.map((w) => ({ ...w, icon: '🔫' })) : [];
+  grid.innerHTML = list
+    .map(
+      (w) => `
     <div class="weapon-card">
-      <div class="weapon-icon">${w.icon}</div>
+      <div class="weapon-icon">${w.icon || '🔫'}</div>
       <div class="weapon-info">
         <span class="weapon-name">${w.name}</span>
-        <span class="weapon-stats">${w.kills.toLocaleString()} убийств</span>
+        <span class="weapon-stats">${(w.kills || 0).toLocaleString()} убийств</span>
       </div>
     </div>
   `
-  ).join('');
+    )
+    .join('');
 }
 
-function renderMaps() {
+function renderMaps(mapsData = null) {
   const grid = document.getElementById('mapsGrid');
   if (!grid) return;
-  grid.innerHTML = MAPS.map((m) => {
-    const total = m.wins + m.losses;
-    const winrate = total > 0 ? Math.round((m.wins / total) * 100) : 0;
-    const winrateClass = winrate >= 50 ? '' : 'low';
-    return `
+  const list = mapsData?.length > 0 ? mapsData : [];
+  grid.innerHTML = list
+    .map((m) => {
+      const total = (m.wins || 0) + (m.losses || 0);
+      const winrate = total > 0 ? Math.round(((m.wins || 0) / total) * 100) : 0;
+      const winrateClass = winrate >= 50 ? '' : 'low';
+      return `
     <div class="map-card">
-      <span class="map-name">${m.name.replace('de_', '')}</span>
+      <span class="map-name">${(m.name || '').replace('de_', '')}</span>
       <span class="map-winrate ${winrateClass}">${winrate}%</span>
     </div>
   `;
-  }).join('');
+    })
+    .join('');
 }
 
-function renderMatches() {
+function renderMatches(matchesData = null) {
   const list = document.getElementById('matchesList');
   if (!list) return;
-  list.innerHTML = MATCHES.map(
-    (m) => `
+  const items = matchesData?.length > 0 ? matchesData : [];
+  list.innerHTML = items
+    .map(
+      (m) => `
     <div class="match-card ${m.win ? 'win' : 'loss'}">
-      <span class="match-map">${m.map.replace('de_', '')}</span>
-      <span class="match-score">${m.score}</span>
-      <span class="match-kda">${m.kda}</span>
-      <span class="match-date">${m.date}</span>
+      <span class="match-map">${(m.map || '').replace('de_', '')}</span>
+      <span class="match-score">${m.score || '—'}</span>
+      ${m.kda ? `<span class="match-kda">${m.kda}</span>` : ''}
+      <span class="match-date">${m.date || '—'}</span>
     </div>
   `
-  ).join('');
+    )
+    .join('');
 }
 
 async function handleSearch() {
   const input = document.getElementById('steamIdInput');
-  const steamId = parseSteamId(input.value);
+  const steamId = parseSteamId(input?.value);
 
   if (!steamId) {
-    renderWithDemo();
+    renderEmpty();
     return;
   }
 
   const main = document.querySelector('main');
-  main.classList.add('loading');
+  if (main) main.classList.add('loading');
 
   const [statsRes, summary] = await Promise.all([
     fetchPlayerStats(steamId),
     fetchPlayerSummary(steamId),
   ]);
 
-  main.classList.remove('loading');
+  if (main) main.classList.remove('loading');
 
   if (statsRes.success && statsRes.data) {
-    const stats = formatStats(statsRes.data);
+    const stats = formatStats(statsRes.data, summary);
     stats.steamId = steamId;
     renderOverview(stats, summary);
-    if (summary) {
-      document.getElementById('playerAvatar').src = summary.avatarfull;
-    }
+    renderWeapons(stats.weapons);
+    renderMaps(stats.maps);
+    const matchesList = document.getElementById('matchesList');
+    if (matchesList) renderMatches([]);
   } else {
-    renderWithDemo();
-    if (!STEAM_API_KEY) {
-      console.info('Добавьте STEAM_API_KEY в script.js для загрузки реальных данных');
+    renderEmpty();
+    if (summary) {
+      renderOverview({ ...EMPTY_STATS, steamId }, summary);
+      const av = document.getElementById('playerAvatar');
+      if (av && summary.avatarfull) av.src = summary.avatarfull;
     }
+    renderWeapons([]);
+    renderMaps([]);
+    renderMatches([]);
   }
 }
 
-function renderWithDemo() {
-  renderOverview(DEMO_STATS);
-  renderWeapons();
-  renderMaps();
-  renderMatches();
+function renderEmpty() {
+  renderOverview({ ...EMPTY_STATS });
+  renderWeapons([]);
+  renderMaps([]);
+  const list = document.getElementById('matchesList');
+  if (list) renderMatches([]);
 }
 
 // Навигация по якорям
@@ -222,4 +277,18 @@ if (steamInput) steamInput.addEventListener('keypress', (e) => {
 });
 
 // Инициализация
-renderWithDemo();
+async function initStats() {
+  const input = document.getElementById('steamIdInput');
+  if (!input) return;
+  try {
+    const res = await fetch('/api/me', { credentials: 'include' });
+    const data = await res.json();
+    if (data.loggedIn && data.user?.steamId) {
+      input.value = data.user.steamId;
+      await handleSearch();
+      return;
+    }
+  } catch (e) {}
+  renderEmpty();
+}
+initStats();
