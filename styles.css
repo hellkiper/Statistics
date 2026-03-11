@@ -496,6 +496,24 @@ body {
   border-color: var(--pink);
 }
 
+.faceit-search-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+  max-width: 280px;
+}
+
+.faceit-search-wrap .search-input {
+  max-width: none;
+}
+
+.faceit-error-hint {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--pink);
+}
+
 .btn-search {
   padding: 0.75rem 1.5rem;
   background: var(--pink);

@@ -23,6 +23,8 @@ app.use((req, res, next) => {
 
 // Steam API ключ — получи на https://steamcommunity.com/dev/apikey
 const STEAM_API_KEY = process.env.STEAM_API_KEY || '';
+// Faceit API — https://developers.faceit.com/
+const FACEIT_API_KEY = process.env.FACEIT_API_KEY || '';
 
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((obj, done) => done(null, obj));
@@ -89,17 +91,18 @@ app.get('/api/me', (req, res) => {
 
 app.get('/api/stats', async (req, res) => {
   const steamId = req.query.steamid;
-  if (!steamId || !STEAM_API_KEY) {
-    return res.json({ success: false });
-  }
+  if (!steamId) return res.json({ success: false, reason: 'no_steamid' });
+  if (!STEAM_API_KEY) return res.json({ success: false, reason: 'no_steam_key' });
   try {
     const r = await fetch(
       `https://api.steampowered.com/ISteamUserStats/GetUserStatsForGame/v2/?appid=730&key=${STEAM_API_KEY}&steamid=${steamId}`
     );
     const data = await r.json();
-    res.json(data.playerstats ? { success: true, data: data.playerstats } : { success: false });
+    if (data.playerstats) return res.json({ success: true, data: data.playerstats });
+    if (data.response?.error) return res.json({ success: false, reason: 'steam_error' });
+    return res.json({ success: false, reason: 'no_stats' });
   } catch (e) {
-    res.json({ success: false });
+    return res.json({ success: false, reason: 'network' });
   }
 });
 
@@ -126,9 +129,87 @@ app.get('/api/player', async (req, res) => {
   }
 });
 
+async function findFaceitPlayer(steamId, nickname) {
+  if (!steamId && !nickname) return null;
+  if (steamId && FACEIT_API_KEY) {
+    for (const gameId of ['cs2', 'csgo']) {
+      const r = await fetch(
+        `https://open.faceit.com/data/v4/players?game=${gameId}&game_player_id=${steamId}`,
+        { headers: { Authorization: `Bearer ${FACEIT_API_KEY}` } }
+      );
+      const p = await r.json();
+      if (p?.player_id && !p.error) return { player: p, gameId };
+    }
+  }
+  if (nickname && FACEIT_API_KEY) {
+    const r = await fetch(
+      `https://open.faceit.com/data/v4/search/players?nickname=${encodeURIComponent(nickname)}&limit=5`,
+      { headers: { Authorization: `Bearer ${FACEIT_API_KEY}` } }
+    );
+    const data = await r.json();
+    const items = data?.items || [];
+    for (const item of items) {
+      if (item.nickname?.toLowerCase() === nickname.toLowerCase()) {
+        const pr = await fetch(`https://open.faceit.com/data/v4/players/${item.player_id}`,
+          { headers: { Authorization: `Bearer ${FACEIT_API_KEY}` } });
+        const full = await pr.json();
+        if (full?.player_id) return { player: full, gameId: full.games?.cs2 ? 'cs2' : 'csgo' };
+      }
+    }
+    if (items[0]?.player_id) {
+      const pr = await fetch(`https://open.faceit.com/data/v4/players/${items[0].player_id}`,
+        { headers: { Authorization: `Bearer ${FACEIT_API_KEY}` } });
+      const full = await pr.json();
+      if (full?.player_id) return { player: full, gameId: full.games?.cs2 ? 'cs2' : 'csgo' };
+    }
+  }
+  return null;
+}
+
+async function fetchFaceitGameStats(playerId, gameId) {
+  if (!playerId || !gameId || !FACEIT_API_KEY) return null;
+  const r = await fetch(
+    `https://open.faceit.com/data/v4/players/${playerId}/stats/${gameId}`,
+    { headers: { Authorization: `Bearer ${FACEIT_API_KEY}` } }
+  );
+  const data = await r.json();
+  return data?.lifetime || data;
+}
+
+app.get('/api/faceit/stats', async (req, res) => {
+  const steamId = req.query.steamid;
+  const nickname = req.query.nickname;
+  const all = req.query.all === '1';
+  if (!steamId && !nickname) return res.json({ success: false });
+  if (!FACEIT_API_KEY) return res.json({ success: false });
+  try {
+    const found = await findFaceitPlayer(steamId, nickname);
+    if (!found?.player) return res.json({ success: false });
+    const player = found.player;
+    const games = player.games || {};
+    if (all) {
+      const [cs2Stats, csgoStats] = await Promise.all([
+        games.cs2 ? fetchFaceitGameStats(player.player_id, 'cs2') : Promise.resolve(null),
+        games.csgo ? fetchFaceitGameStats(player.player_id, 'csgo') : Promise.resolve(null)
+      ]);
+      return res.json({
+        success: true,
+        player: { nickname: player.nickname, avatar: player.avatar },
+        cs2: games.cs2 ? { game: games.cs2, stats: cs2Stats } : null,
+        csgo: games.csgo ? { game: games.csgo, stats: csgoStats } : null
+      });
+    }
+    const gameId = found.gameId;
+    const stats = await fetchFaceitGameStats(player.player_id, gameId);
+    const game = player.games?.cs2 || player.games?.csgo || {};
+    return res.json({ success: true, player: { nickname: player.nickname, avatar: player.avatar, ...game }, stats });
+  } catch (e) {
+    return res.json({ success: false });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Sakura CS2: http://localhost:${PORT}`);
-  if (!STEAM_API_KEY) {
-    console.warn('⚠️  STEAM_API_KEY не задан! Получи ключ: https://steamcommunity.com/dev/apikey');
-  }
+  if (!STEAM_API_KEY) console.warn('⚠️  STEAM_API_KEY не задан!');
+  if (!FACEIT_API_KEY) console.warn('⚠️  FACEIT_API_KEY не задан — Faceit fallback недоступен.');
 });

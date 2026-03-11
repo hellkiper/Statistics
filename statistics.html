@@ -42,8 +42,12 @@
     <section class="section section-dark">
       <div class="search-bar">
         <input type="text" id="steamIdInput" placeholder="Steam ID / Steam URL..." class="search-input">
+        <div id="faceitSearchWrap" class="faceit-search-wrap" style="display:none">
+          <input type="text" id="faceitNickInput" placeholder="Faceit ник (если Steam пусто)" class="search-input">
+        </div>
         <button id="searchBtn" class="btn-search">Поиск</button>
       </div>
+      <p id="apiErrorHint" class="faceit-error-hint" style="display:none"></p>
 
       <div class="player-card">
         <div class="player-avatar">
@@ -52,7 +56,7 @@
         </div>
         <div class="player-info">
           <h2 id="playerName">Игрок</h2>
-          <p class="player-id">Steam ID: <span id="playerSteamId">—</span></p>
+          <p class="player-id"><span id="playerIdLabel">Steam ID:</span> <span id="playerSteamId">—</span></p>
         </div>
       </div>
 
