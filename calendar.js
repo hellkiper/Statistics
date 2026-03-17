@@ -25,7 +25,7 @@
     const error = document.getElementById('calendarError');
 
     try {
-      const res = await fetch(`${API_BASE}/api/hltv/events`);
+      const res = await fetch(`${API_BASE}/api/calendar/events`);
       const data = await res.json();
 
       loading.style.display = 'none';
@@ -36,45 +36,32 @@
       }
 
       const now = Date.now();
-      const upcoming = data.events.filter((e) => e.startDate >= now);
-      const past = data.events.filter((e) => e.endDate < now);
+      const active = data.events.filter((e) => e.endDate >= now);
 
       let html = '';
-      if (upcoming.length > 0) {
-        html += '<h2 class="calendar-section-title">Ближайшие турниры</h2>';
+      if (active.length > 0) {
+        html += '<h2 class="calendar-section-title">Актуальные и будущие турниры</h2>';
         html += '<div class="calendar-grid">';
-        upcoming.slice(0, 15).forEach((ev) => {
+        active.forEach((ev) => {
+          const isOngoing = ev.startDate < now && ev.endDate >= now;
+          const extra = [];
+          if (ev.tier) extra.push(`Тиер ${ev.tier}`);
+          if (ev.prizePool) extra.push(`$${(ev.prizePool / 1000).toFixed(0)}K`);
+          if (ev.location) extra.push(ev.location);
           html += `
-          <div class="event-card">
+          <div class="event-card ${isOngoing ? 'event-card-ongoing' : ''}">
             ${ev.logo ? `<img src="${ev.logo}" alt="" class="event-logo">` : ''}
             <div class="event-info">
               <h3 class="event-name">${escapeHtml(ev.name)}</h3>
               <p class="event-dates">${formatDateRange(ev.startDate, ev.endDate)}</p>
-              <p class="event-matches">${ev.matchCount} матчей</p>
+              ${ev.matchCount > 0 ? `<p class="event-matches">${ev.matchCount} матчей</p>` : ''}
+              ${extra.length ? `<p class="event-extra">${extra.join(' • ')}</p>` : ''}
             </div>
           </div>`;
         });
         html += '</div>';
-      }
-
-      if (past.length > 0) {
-        html += '<h2 class="calendar-section-title">Прошедшие турниры</h2>';
-        html += '<div class="calendar-grid">';
-        past.slice(0, 20).forEach((ev) => {
-          html += `
-          <div class="event-card event-card-past">
-            ${ev.logo ? `<img src="${ev.logo}" alt="" class="event-logo">` : ''}
-            <div class="event-info">
-              <h3 class="event-name">${escapeHtml(ev.name)}</h3>
-              <p class="event-dates">${formatDateRange(ev.startDate, ev.endDate)}</p>
-              <p class="event-matches">${ev.matchCount} матчей</p>
-            </div>
-          </div>`;
-        });
-        html += '</div>';
-      }
-
-      if (!html) {
+      } else {
+        error.querySelector('p').textContent = 'Нет турниров с 2026 года. Данные HLTV обновляются.';
         error.style.display = '';
         return;
       }

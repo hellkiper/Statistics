@@ -830,8 +830,9 @@ body {
   transform: translateY(-2px);
 }
 
-.event-card-past {
-  opacity: 0.85;
+.event-card-ongoing {
+  border-color: var(--pink);
+  box-shadow: 0 0 0 1px var(--pink);
 }
 
 .event-logo {
@@ -866,6 +867,13 @@ body {
   font-size: 0.8rem;
   color: var(--text-dark);
   opacity: 0.6;
+}
+
+.event-extra {
+  font-size: 0.8rem;
+  color: var(--text-dark);
+  opacity: 0.7;
+  margin-top: 0.15rem;
 }
 
 /* Responsive */

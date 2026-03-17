@@ -25,6 +25,8 @@ app.use((req, res, next) => {
 const STEAM_API_KEY = process.env.STEAM_API_KEY || '';
 // Faceit API — https://developers.faceit.com/
 const FACEIT_API_KEY = process.env.FACEIT_API_KEY || '';
+// BALLDONTLIE CS2 — https://app.balldontlie.io/ (бесплатный ключ)
+const BALLDONTLIE_API_KEY = process.env.BALLDONTLIE_API_KEY || '';
 
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((obj, done) => done(null, obj));
@@ -213,49 +215,97 @@ app.get('/api/faceit/stats', async (req, res) => {
 });
 
 const HLTV_API = 'https://hltv-api.vercel.app/api';
+const BALLDONTLIE_API = 'https://api.balldontlie.io';
+const CUTOFF_2026 = new Date('2026-01-01').getTime();
+
+async function fetchHltvEvents() {
+  const [matchesRes, resultsRes] = await Promise.all([
+    fetch(`${HLTV_API}/matches.json`),
+    fetch(`${HLTV_API}/results.json`)
+  ]);
+  const matches = await matchesRes.json().catch(() => []);
+  const results = await resultsRes.json().catch(() => []);
+
+  const eventsMap = new Map();
+  const addMatch = (m) => {
+    const name = m.event?.name;
+    if (!name) return;
+    const time = m.time ? new Date(m.time).getTime() : 0;
+    if (!eventsMap.has(name)) {
+      eventsMap.set(name, { name, logo: m.event?.logo || '', startDate: time, endDate: time, matchCount: 0 });
+    }
+    const e = eventsMap.get(name);
+    e.startDate = Math.min(e.startDate, time);
+    e.endDate = Math.max(e.endDate, time);
+    e.matchCount++;
+  };
+  matches.forEach(addMatch);
+  results.forEach(addMatch);
+
+  return Array.from(eventsMap.values())
+    .filter((e) => e.startDate >= CUTOFF_2026)
+    .map((e) => ({ name: e.name, logo: e.logo, startDate: e.startDate, endDate: e.endDate, matchCount: e.matchCount }))
+    .sort((a, b) => a.startDate - b.startDate)
+    .slice(0, 50);
+}
+
+async function fetchBalldontlieEvents() {
+  if (!BALLDONTLIE_API_KEY) return null;
+  const all = [];
+  let cursor = null;
+  for (let i = 0; i < 5; i++) {
+    const url = new URL(`${BALLDONTLIE_API}/cs/v1/tournaments`);
+    url.searchParams.set('per_page', '100');
+    if (cursor) url.searchParams.set('cursor', cursor);
+    const r = await fetch(url, {
+      headers: { Authorization: BALLDONTLIE_API_KEY }
+    });
+    if (!r.ok) return null;
+    const data = await r.json().catch(() => null);
+    if (!data?.data?.length) break;
+    all.push(...data.data);
+    cursor = data.meta?.next_cursor;
+    if (!cursor) break;
+  }
+  const now = Date.now();
+  return all
+    .filter((t) => {
+      const start = t.start_date ? new Date(t.start_date).getTime() : 0;
+      const end = t.end_date ? new Date(t.end_date).getTime() : start;
+      return start >= CUTOFF_2026 && end >= now;
+    })
+    .map((t) => ({
+      name: t.name,
+      logo: '',
+      startDate: t.start_date ? new Date(t.start_date).getTime() : 0,
+      endDate: t.end_date ? new Date(t.end_date).getTime() : 0,
+      matchCount: 0,
+      tier: t.tier,
+      prizePool: t.prize_pool,
+      location: t.location || t.country
+    }))
+    .sort((a, b) => a.startDate - b.startDate)
+    .slice(0, 50);
+}
+
+app.get('/api/calendar/events', async (req, res) => {
+  try {
+    let events = await fetchBalldontlieEvents();
+    if (!events?.length) events = await fetchHltvEvents();
+    res.json({ success: true, events: events || [], source: events?.length ? 'balldontlie' : 'hltv' });
+  } catch (e) {
+    try {
+      const events = await fetchHltvEvents();
+      res.json({ success: true, events, source: 'hltv' });
+    } catch (e2) {
+      res.json({ success: false, events: [] });
+    }
+  }
+});
 
 app.get('/api/hltv/events', async (req, res) => {
   try {
-    const [matchesRes, resultsRes] = await Promise.all([
-      fetch(`${HLTV_API}/matches.json`),
-      fetch(`${HLTV_API}/results.json`)
-    ]);
-    const matches = await matchesRes.json().catch(() => []);
-    const results = await resultsRes.json().catch(() => []);
-
-    const eventsMap = new Map();
-    const addMatch = (m) => {
-      const name = m.event?.name;
-      if (!name) return;
-      const time = m.time ? new Date(m.time).getTime() : 0;
-      if (!eventsMap.has(name)) {
-        eventsMap.set(name, {
-          name,
-          logo: m.event?.logo || '',
-          startDate: time,
-          endDate: time,
-          matchCount: 0
-        });
-      }
-      const e = eventsMap.get(name);
-      e.startDate = Math.min(e.startDate, time);
-      e.endDate = Math.max(e.endDate, time);
-      e.matchCount++;
-    };
-    matches.forEach(addMatch);
-    results.forEach(addMatch);
-
-    const events = Array.from(eventsMap.values())
-      .map((e) => ({
-        name: e.name,
-        logo: e.logo,
-        startDate: e.startDate,
-        endDate: e.endDate,
-        matchCount: e.matchCount
-      }))
-      .sort((a, b) => b.startDate - a.startDate)
-      .slice(0, 50);
-
+    const events = await fetchHltvEvents();
     res.json({ success: true, events });
   } catch (e) {
     res.json({ success: false, events: [] });
@@ -266,4 +316,5 @@ app.listen(PORT, () => {
   console.log(`Sakura CS2: http://localhost:${PORT}`);
   if (!STEAM_API_KEY) console.warn('⚠️  STEAM_API_KEY не задан!');
   if (!FACEIT_API_KEY) console.warn('⚠️  FACEIT_API_KEY не задан — Faceit fallback недоступен.');
+  if (!BALLDONTLIE_API_KEY) console.warn('⚠️  BALLDONTLIE_API_KEY не задан — календарь использует HLTV.');
 });

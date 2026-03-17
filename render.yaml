@@ -13,3 +13,7 @@ services:
         sync: false
       - key: SESSION_SECRET
         generateValue: true
+      - key: FACEIT_API_KEY
+        sync: false
+      - key: BALLDONTLIE_API_KEY
+        sync: false
