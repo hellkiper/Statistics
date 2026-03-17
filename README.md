@@ -14,6 +14,7 @@
 - **sets.html** — собери сет (в разработке)
 - **giveaway.html** — розыгрыш (в разработке)
 - **videos.html** — Sakura Videos (в разработке)
+- **calendar.html** — турниры CS2 (список)
 
 ## Кнопки
 
@@ -28,6 +29,7 @@
 3. Environment → добавь:
    - `STEAM_API_KEY` — ключ с [steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey)
    - `FACEIT_API_KEY` — для Faceit-статистики (опционально)
+   - `BALLDONTLIE_API_KEY` — для турниров, бесплатный ключ на [app.balldontlie.io](https://app.balldontlie.io)
    - `BASE_URL` — оставь пустым (Render подставит URL сам)
 4. Deploy
 5. После деплоя — зайди в настройки Steam API ключа и добавь домен вида `https://твой-сервис.onrender.com`

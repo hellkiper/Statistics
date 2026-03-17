@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Розыгрыш | Sakura CS2</title>
+  <title>Календарь | Sakura CS2</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body data-page="giveaway">
+<body data-page="calendar">
   <nav class="nav">
     <div class="nav-inner">
       <div class="nav-left">
@@ -31,26 +31,32 @@
 
   <main class="main">
     <section class="page-header">
-      <h1>Розыгрыш</h1>
-      <p>Участвуй и выигрывай призы</p>
+      <h1>Календарь</h1>
+      <p>Турниры и события CS2</p>
       <div class="page-header-buttons">
-        <a href="sets.html" class="btn-hero">собери сет</a>
+        <a href="statistics.html" class="btn-hero">статистика</a>
         <a href="index.html" class="btn-hero btn-hero-outline">на главную</a>
       </div>
     </section>
 
-    <section class="section section-dark">
-      <div class="page-placeholder">
-        <p>Розыгрыши в разработке</p>
+    <section class="section section-pink-alt">
+      <div id="calendarLoading" class="page-placeholder">
+        <p>Загрузка турниров...</p>
+      </div>
+      <div id="calendarEvents" class="calendar-events" style="display:none"></div>
+      <div id="calendarError" class="page-placeholder" style="display:none">
+        <p>Не удалось загрузить данные. Попробуй позже.</p>
       </div>
     </section>
   </main>
 
   <footer class="footer">
-    <p>SAKURA CS2 • Steam Web API • App ID: 730</p>
+    <p>SAKURA CS2 • HLTV • Steam Web API • App ID: 730</p>
   </footer>
 
+  <script>window.API_BASE = (window.location.hostname.includes('github.io') || window.location.protocol === 'file:' || !window.location.hostname) ? 'https://statistics-gm7c.onrender.com' : '';</script>
   <script src="nav.js"></script>
   <script src="auth.js"></script>
+  <script src="calendar.js"></script>
 </body>
 </html>
