@@ -40,6 +40,15 @@
     </section>
 
     <section class="section section-pink-alt">
+      <div class="calendar-layout" id="calendarLayout" style="display:none">
+        <div class="calendar-mini" id="calendarPrev"></div>
+        <div class="calendar-main-wrap">
+          <button type="button" class="calendar-nav calendar-nav-prev" id="calendarNavPrev" aria-label="Предыдущий месяц">‹</button>
+          <div class="calendar-main" id="calendarMain"></div>
+          <button type="button" class="calendar-nav calendar-nav-next" id="calendarNavNext" aria-label="Следующий месяц">›</button>
+        </div>
+        <div class="calendar-mini" id="calendarNext"></div>
+      </div>
       <div id="calendarLoading" class="page-placeholder">
         <p>Загрузка турниров...</p>
       </div>
