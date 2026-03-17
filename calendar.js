@@ -38,9 +38,9 @@
   }
 
   function getEventsForDate(year, month, day) {
-    const d = new Date(year, month, day);
-    const ts = d.getTime();
-    return events.filter((e) => ts >= e.startDate && ts <= e.endDate);
+    const dayStart = new Date(year, month, day).getTime();
+    const dayEnd = dayStart + 24 * 60 * 60 * 1000 - 1;
+    return events.filter((e) => e.startDate <= dayEnd && e.endDate >= dayStart);
   }
 
   function renderMiniCalendar(containerId, year, month) {
@@ -132,6 +132,16 @@
       if (data.success && data.events?.length) {
         const now = Date.now();
         events = data.events.filter((e) => e.endDate >= now);
+        if (events.length > 0) {
+          const monthStart = new Date(currentYear, currentMonth, 1).getTime();
+          const monthEnd = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59).getTime();
+          const hasEventsThisMonth = events.some((e) => e.startDate <= monthEnd && e.endDate >= monthStart);
+          if (!hasEventsThisMonth) {
+            const first = new Date(events[0].startDate);
+            currentYear = first.getFullYear();
+            currentMonth = first.getMonth();
+          }
+        }
       } else {
         events = [];
       }
