@@ -3,14 +3,96 @@
     (typeof window !== 'undefined' && window.API_BASE) ||
     (window.location.hostname.includes('github.io') ? 'https://statistics-gm7c.onrender.com' : '');
 
+  const MONTHS_RU = [
+    'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+    'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+  ];
+  const DAYS_FULL = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
+  const DAYS_SHORT = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+
+  let currentYear = new Date().getFullYear();
+  let currentMonth = new Date().getMonth();
+  let events = [];
+
+  function getMonthData(year, month) {
+    const first = new Date(year, month, 1);
+    const last = new Date(year, month + 1, 0);
+    const startDay = (first.getDay() + 6) % 7;
+    const daysInMonth = last.getDate();
+    const prevMonth = month === 0 ? 11 : month - 1;
+    const prevYear = month === 0 ? year - 1 : year;
+    const prevLast = new Date(prevYear, prevMonth + 1, 0).getDate();
+    const cells = [];
+    let day = 1;
+    let prevDay = prevLast - startDay + 1;
+    for (let i = 0; i < 42; i++) {
+      if (i < startDay) {
+        cells.push({ day: prevDay++, isPrev: true, isNext: false });
+      } else if (day <= daysInMonth) {
+        cells.push({ day: day++, isPrev: false, isNext: false });
+      } else {
+        cells.push({ day: i - startDay - daysInMonth + 1, isPrev: false, isNext: true });
+      }
+    }
+    return { cells, daysInMonth, startDay };
+  }
+
+  function getEventsForDate(year, month, day) {
+    const d = new Date(year, month, day);
+    const ts = d.getTime();
+    return events.filter((e) => ts >= e.startDate && ts <= e.endDate);
+  }
+
+  function renderMiniCalendar(containerId, year, month) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    const { cells } = getMonthData(year, month);
+    const title = `${MONTHS_RU[month]} ${year}`;
+    let html = `<div class="calendar-mini-title">${title}</div>`;
+    html += '<div class="calendar-mini-days">' + DAYS_SHORT.map((d) => `<span>${d}</span>`).join('') + '</div>';
+    html += '<div class="calendar-mini-grid">';
+    cells.slice(0, 35).forEach((c) => {
+      const cls = c.isPrev || c.isNext ? ' other-month' : '';
+      html += `<span class="calendar-mini-cell${cls}">${c.day}</span>`;
+    });
+    html += '</div>';
+    el.innerHTML = html;
+  }
+
+  function renderMainCalendar(year, month) {
+    const el = document.getElementById('calendarMain');
+    if (!el) return;
+    const { cells, daysInMonth, startDay } = getMonthData(year, month);
+    const title = `${MONTHS_RU[month].toUpperCase()} ${year}`;
+    let html = `<h2 class="calendar-main-title">${title}</h2>`;
+    html += '<div class="calendar-main-header">' + DAYS_FULL.map((d) => `<div class="calendar-main-day">${d}</div>`).join('') + '</div>';
+    html += '<div class="calendar-main-grid">';
+    cells.forEach((c, i) => {
+      const cls = [];
+      if (c.isPrev) cls.push('prev-month');
+      if (c.isNext) cls.push('next-month');
+      const evs = !c.isPrev && !c.isNext ? getEventsForDate(year, month, c.day) : [];
+      if (evs.length) cls.push('has-event');
+      const evTip = evs.length ? ` title="${evs.map((e) => e.name).join(', ')}"` : '';
+      html += `<div class="calendar-main-cell ${cls.join(' ')}"${evTip} data-day="${c.day}" data-prev="${c.isPrev}" data-next="${c.isNext}">`;
+      html += `<span class="cell-day">${c.day}</span>`;
+      if (evs.length) html += '<span class="cell-dot" title="' + escapeHtml(evs[0].name) + '">•</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+    el.innerHTML = html;
+  }
+
+  function updateCalendar() {
+    renderMiniCalendar('calendarPrev', currentMonth === 0 ? currentYear - 1 : currentYear, currentMonth === 0 ? 11 : currentMonth - 1);
+    renderMainCalendar(currentYear, currentMonth);
+    renderMiniCalendar('calendarNext', currentMonth === 11 ? currentYear + 1 : currentYear, currentMonth === 11 ? 0 : currentMonth + 1);
+  }
+
   function formatDate(ts) {
     if (!ts) return '—';
     const d = new Date(ts);
-    return d.toLocaleDateString('ru-RU', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
+    return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
   }
 
   function formatDateRange(start, end) {
@@ -19,30 +101,41 @@
     return s === e ? s : `${s} — ${e}`;
   }
 
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
   async function loadEvents() {
     const loading = document.getElementById('calendarLoading');
     const container = document.getElementById('calendarEvents');
     const error = document.getElementById('calendarError');
+    const layout = document.getElementById('calendarLayout');
 
     try {
+      loading.style.display = '';
+      layout.style.display = 'none';
+
       const res = await fetch(`${API_BASE}/api/calendar/events`);
       const data = await res.json();
 
       loading.style.display = 'none';
+      layout.style.display = '';
 
-      if (!data.success || !data.events?.length) {
-        error.style.display = '';
-        return;
+      if (data.success && data.events?.length) {
+        const now = Date.now();
+        events = data.events.filter((e) => e.endDate >= now);
+      } else {
+        events = [];
       }
 
-      const now = Date.now();
-      const active = data.events.filter((e) => e.endDate >= now);
+      updateCalendar();
 
-      let html = '';
-      if (active.length > 0) {
-        html += '<h2 class="calendar-section-title">Актуальные и будущие турниры</h2>';
+      if (events.length > 0) {
+        let html = '<h2 class="calendar-section-title">Актуальные и будущие турниры</h2>';
         html += '<div class="calendar-grid">';
-        active.forEach((ev) => {
+        events.forEach((ev) => {
           const isOngoing = ev.startDate < now && ev.endDate >= now;
           const extra = [];
           if (ev.tier) extra.push(`Тиер ${ev.tier}`);
@@ -60,25 +153,38 @@
           </div>`;
         });
         html += '</div>';
+        container.innerHTML = html;
+        container.style.display = '';
       } else {
-        error.querySelector('p').textContent = 'Нет турниров с 2026 года. Данные HLTV обновляются.';
+        error.querySelector('p').textContent = 'Нет турниров с 2026 года.';
         error.style.display = '';
-        return;
       }
-
-      container.innerHTML = html;
-      container.style.display = '';
     } catch (e) {
       loading.style.display = 'none';
+      layout.style.display = '';
+      events = [];
+      updateCalendar();
       error.style.display = '';
     }
   }
 
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
+  document.getElementById('calendarNavPrev')?.addEventListener('click', () => {
+    currentMonth--;
+    if (currentMonth < 0) {
+      currentMonth = 11;
+      currentYear--;
+    }
+    updateCalendar();
+  });
+
+  document.getElementById('calendarNavNext')?.addEventListener('click', () => {
+    currentMonth++;
+    if (currentMonth > 11) {
+      currentMonth = 0;
+      currentYear++;
+    }
+    updateCalendar();
+  });
 
   loadEvents();
 })();
