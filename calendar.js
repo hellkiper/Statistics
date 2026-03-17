@@ -123,7 +123,9 @@
       loading.style.display = '';
       layout.style.display = 'none';
 
-      const res = await fetch(`${API_BASE}/api/calendar/events`);
+      const apiUrl = `${API_BASE || ''}/api/calendar/events`;
+      const res = await fetch(apiUrl, { mode: 'cors' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
 
       loading.style.display = 'none';
@@ -131,7 +133,7 @@
 
       if (data.success && data.events?.length) {
         const now = Date.now();
-        events = data.events.filter((e) => e.endDate >= now - 5 * 365 * 24 * 60 * 60 * 1000);
+        events = data.events;
         if (events.length > 0) {
           const monthStart = new Date(currentYear, currentMonth, 1).getTime();
           const monthEnd = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59).getTime();

@@ -63,7 +63,10 @@
     <p>SAKURA CS2 • HLTV • Steam Web API • App ID: 730</p>
   </footer>
 
-  <script>window.API_BASE = window.location.hostname.includes('github.io') ? 'https://statistics-gm7c.onrender.com' : '';</script>
+  <script>
+    window.API_BASE = (window.location.hostname.includes('github.io') || window.location.protocol === 'file:' || !window.location.hostname)
+      ? 'https://statistics-gm7c.onrender.com' : '';
+  </script>
   <script src="nav.js"></script>
   <script src="auth.js"></script>
   <script src="calendar.js"></script>
