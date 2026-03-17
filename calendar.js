@@ -73,10 +73,16 @@
       if (c.isNext) cls.push('next-month');
       const evs = !c.isPrev && !c.isNext ? getEventsForDate(year, month, c.day) : [];
       if (evs.length) cls.push('has-event');
-      const evTip = evs.length ? ` title="${evs.map((e) => e.name).join(', ')}"` : '';
-      html += `<div class="calendar-main-cell ${cls.join(' ')}"${evTip} data-day="${c.day}" data-prev="${c.isPrev}" data-next="${c.isNext}">`;
+      html += `<div class="calendar-main-cell ${cls.join(' ')}" data-day="${c.day}" data-prev="${c.isPrev}" data-next="${c.isNext}">`;
       html += `<span class="cell-day">${c.day}</span>`;
-      if (evs.length) html += '<span class="cell-dot" title="' + escapeHtml(evs[0].name) + '">•</span>';
+      if (evs.length) {
+        html += '<div class="cell-events">';
+        evs.forEach((ev) => {
+          const prize = ev.prizePool ? ` • $${(ev.prizePool / 1000).toFixed(0)}K` : '';
+          html += `<span class="cell-event" title="${escapeHtml(ev.name)}${prize}">${escapeHtml(ev.name)}</span>`;
+        });
+        html += '</div>';
+      }
       html += '</div>';
     });
     html += '</div>';
