@@ -217,6 +217,7 @@ app.get('/api/faceit/stats', async (req, res) => {
 const HLTV_API = 'https://hltv-api.vercel.app/api';
 const BALLDONTLIE_API = 'https://api.balldontlie.io';
 const CUTOFF_2026 = new Date('2026-01-01').getTime();
+const CUTOFF_2020 = new Date('2020-01-01').getTime();
 
 async function fetchHltvEvents() {
   const [matchesRes, resultsRes] = await Promise.all([
@@ -231,6 +232,7 @@ async function fetchHltvEvents() {
     const name = m.event?.name;
     if (!name) return;
     const time = m.time ? new Date(m.time).getTime() : 0;
+    if (!time) return;
     if (!eventsMap.has(name)) {
       eventsMap.set(name, { name, logo: m.event?.logo || '', startDate: time, endDate: time, matchCount: 0 });
     }
@@ -243,7 +245,7 @@ async function fetchHltvEvents() {
   results.forEach(addMatch);
 
   return Array.from(eventsMap.values())
-    .filter((e) => e.startDate >= CUTOFF_2026)
+    .filter((e) => e.startDate >= CUTOFF_2020)
     .map((e) => ({ name: e.name, logo: e.logo, startDate: e.startDate, endDate: e.endDate, matchCount: e.matchCount }))
     .sort((a, b) => a.startDate - b.startDate)
     .slice(0, 50);
@@ -257,22 +259,23 @@ async function fetchBalldontlieEvents() {
     const url = new URL(`${BALLDONTLIE_API}/cs/v1/tournaments`);
     url.searchParams.set('per_page', '100');
     if (cursor) url.searchParams.set('cursor', cursor);
-    const r = await fetch(url, {
+    const r = await fetch(url.toString(), {
       headers: { Authorization: BALLDONTLIE_API_KEY }
     });
     if (!r.ok) return null;
     const data = await r.json().catch(() => null);
     if (!data?.data?.length) break;
     all.push(...data.data);
-    cursor = data.meta?.next_cursor;
+    cursor = data.meta?.next_cursor ?? data.meta?.next_page;
     if (!cursor) break;
   }
   const now = Date.now();
+  const cutoff = now - 180 * 24 * 60 * 60 * 1000;
   return all
     .filter((t) => {
       const start = t.start_date ? new Date(t.start_date).getTime() : 0;
       const end = t.end_date ? new Date(t.end_date).getTime() : start;
-      return start >= CUTOFF_2026 && end >= now;
+      return end >= cutoff && start > 0;
     })
     .map((t) => ({
       name: t.name,
@@ -285,7 +288,7 @@ async function fetchBalldontlieEvents() {
       location: t.location || t.country
     }))
     .sort((a, b) => a.startDate - b.startDate)
-    .slice(0, 50);
+    .slice(0, 100);
 }
 
 app.get('/api/calendar/events', async (req, res) => {

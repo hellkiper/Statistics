@@ -131,7 +131,7 @@
 
       if (data.success && data.events?.length) {
         const now = Date.now();
-        events = data.events.filter((e) => e.endDate >= now);
+        events = data.events.filter((e) => e.endDate >= now - 5 * 365 * 24 * 60 * 60 * 1000);
         if (events.length > 0) {
           const monthStart = new Date(currentYear, currentMonth, 1).getTime();
           const monthEnd = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59).getTime();
@@ -172,7 +172,7 @@
         container.innerHTML = html;
         container.style.display = '';
       } else {
-        error.querySelector('p').textContent = 'Нет турниров с 2026 года.';
+        error.querySelector('p').textContent = 'Не удалось загрузить турниры.';
         error.style.display = '';
       }
     } catch (e) {
