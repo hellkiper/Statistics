@@ -881,18 +881,18 @@ body {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  gap: 2.5rem;
+  gap: 1.5rem;
   flex-wrap: wrap;
   margin-bottom: 2rem;
 }
 
 .calendar-mini {
-  flex: 0 0 180px;
+  flex: 0 0 140px;
   background: var(--pink-pastel);
   border: 2px solid var(--pink);
-  border-radius: 12px;
-  padding: 1rem;
-  font-size: 0.95rem;
+  border-radius: 10px;
+  padding: 0.6rem;
+  font-size: 0.8rem;
   color: var(--text-dark);
 }
 
@@ -933,8 +933,8 @@ body {
 .calendar-main-wrap {
   position: relative;
   flex: 1;
-  min-width: 420px;
-  max-width: 900px;
+  min-width: 320px;
+  max-width: 720px;
 }
 
 .calendar-nav {
@@ -973,15 +973,15 @@ body {
   background: var(--pink-pastel);
   border: 2px solid var(--pink);
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1rem;
   color: var(--text-dark);
 }
 
 .calendar-main-title {
-  font-size: 1.75rem;
+  font-size: 1.4rem;
   font-weight: 700;
   text-align: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.6rem;
   letter-spacing: 0.05em;
   color: var(--pink-dark);
 }
@@ -994,10 +994,10 @@ body {
 }
 
 .calendar-main-day {
-  font-size: 0.9rem;
+  font-size: 0.7rem;
   font-weight: 700;
   text-align: center;
-  padding: 0.6rem 0;
+  padding: 0.4rem 0;
   color: var(--pink-dark);
   background: var(--pink-light);
   border-radius: 6px;
@@ -1010,15 +1010,15 @@ body {
 }
 
 .calendar-main-cell {
-  min-height: 90px;
+  min-height: 68px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
-  padding: 0.5rem;
+  padding: 0.35rem;
   border: 1px solid rgba(212, 138, 158, 0.4);
-  border-radius: 8px;
-  font-size: 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
   background: rgba(255, 255, 255, 0.6);
 }
 
@@ -1036,9 +1036,9 @@ body {
 .calendar-main-cell .cell-day {
   display: block;
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   color: var(--text-dark);
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.15rem;
 }
 
 .calendar-main-cell .cell-events {
@@ -1051,16 +1051,16 @@ body {
 }
 
 .calendar-main-cell .cell-event {
-  font-size: 0.7rem;
+  font-size: 0.6rem;
   font-weight: 600;
   color: var(--pink-dark);
   background: rgba(255, 255, 255, 0.8);
-  padding: 0.2rem 0.4rem;
+  padding: 0.15rem 0.3rem;
   border-radius: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
 /* Responsive */
@@ -1118,21 +1118,21 @@ body {
   }
 
   .calendar-main-cell {
-    min-height: 70px;
+    min-height: 58px;
   }
 
   .calendar-main-cell .cell-event {
-    font-size: 0.65rem;
+    font-size: 0.55rem;
   }
 
   .calendar-main-day {
-    font-size: 0.7rem;
+    font-size: 0.6rem;
   }
 
   .calendar-mini {
     flex: 0 0 auto;
     width: 100%;
-    max-width: 200px;
+    max-width: 160px;
   }
 
   .calendar-nav-prev {

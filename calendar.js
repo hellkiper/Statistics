@@ -77,7 +77,8 @@
         html += '<div class="cell-events">';
         evs.forEach((ev) => {
           const prize = ev.prizePool ? ` • $${(ev.prizePool / 1000).toFixed(0)}K` : '';
-          html += `<span class="cell-event" title="${escapeHtml(ev.name)}${prize}">${escapeHtml(ev.name)}</span>`;
+          const short = ev.name.length > 14 ? ev.name.slice(0, 12) + '…' : ev.name;
+          html += `<span class="cell-event" title="${escapeHtml(ev.name)}${prize}">${escapeHtml(short)}</span>`;
         });
         html += '</div>';
       }
