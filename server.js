@@ -212,6 +212,56 @@ app.get('/api/faceit/stats', async (req, res) => {
   }
 });
 
+const HLTV_API = 'https://hltv-api.vercel.app/api';
+
+app.get('/api/hltv/events', async (req, res) => {
+  try {
+    const [matchesRes, resultsRes] = await Promise.all([
+      fetch(`${HLTV_API}/matches.json`),
+      fetch(`${HLTV_API}/results.json`)
+    ]);
+    const matches = await matchesRes.json().catch(() => []);
+    const results = await resultsRes.json().catch(() => []);
+
+    const eventsMap = new Map();
+    const addMatch = (m) => {
+      const name = m.event?.name;
+      if (!name) return;
+      const time = m.time ? new Date(m.time).getTime() : 0;
+      if (!eventsMap.has(name)) {
+        eventsMap.set(name, {
+          name,
+          logo: m.event?.logo || '',
+          startDate: time,
+          endDate: time,
+          matchCount: 0
+        });
+      }
+      const e = eventsMap.get(name);
+      e.startDate = Math.min(e.startDate, time);
+      e.endDate = Math.max(e.endDate, time);
+      e.matchCount++;
+    };
+    matches.forEach(addMatch);
+    results.forEach(addMatch);
+
+    const events = Array.from(eventsMap.values())
+      .map((e) => ({
+        name: e.name,
+        logo: e.logo,
+        startDate: e.startDate,
+        endDate: e.endDate,
+        matchCount: e.matchCount
+      }))
+      .sort((a, b) => b.startDate - a.startDate)
+      .slice(0, 50);
+
+    res.json({ success: true, events });
+  } catch (e) {
+    res.json({ success: false, events: [] });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Sakura CS2: http://localhost:${PORT}`);
   if (!STEAM_API_KEY) console.warn('⚠️  STEAM_API_KEY не задан!');

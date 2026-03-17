@@ -799,6 +799,75 @@ body {
   pointer-events: none;
 }
 
+/* Calendar */
+.calendar-section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 1rem;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.event-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  padding: 1rem;
+  transition: all 0.2s;
+}
+
+.event-card:hover {
+  border-color: var(--pink);
+  transform: translateY(-2px);
+}
+
+.event-card-past {
+  opacity: 0.85;
+}
+
+.event-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.event-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.event-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 0.25rem;
+  line-height: 1.3;
+}
+
+.event-dates {
+  font-size: 0.85rem;
+  color: var(--text-dark);
+  opacity: 0.8;
+  margin-bottom: 0.15rem;
+}
+
+.event-matches {
+  font-size: 0.8rem;
+  color: var(--text-dark);
+  opacity: 0.6;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .nav-inner {

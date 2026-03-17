@@ -40,17 +40,23 @@
     </section>
 
     <section class="section section-pink-alt">
-      <div class="page-placeholder">
-        <p>Календарь турниров и событий в разработке</p>
+      <div id="calendarLoading" class="page-placeholder">
+        <p>Загрузка турниров...</p>
+      </div>
+      <div id="calendarEvents" class="calendar-events" style="display:none"></div>
+      <div id="calendarError" class="page-placeholder" style="display:none">
+        <p>Не удалось загрузить данные. Попробуй позже.</p>
       </div>
     </section>
   </main>
 
   <footer class="footer">
-    <p>SAKURA CS2 • Steam Web API • App ID: 730</p>
+    <p>SAKURA CS2 • HLTV • Steam Web API • App ID: 730</p>
   </footer>
 
+  <script>window.API_BASE = window.location.hostname.includes('github.io') ? 'https://statistics-gm7c.onrender.com' : '';</script>
   <script src="nav.js"></script>
   <script src="auth.js"></script>
+  <script src="calendar.js"></script>
 </body>
 </html>
