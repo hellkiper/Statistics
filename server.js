@@ -214,44 +214,11 @@ app.get('/api/faceit/stats', async (req, res) => {
   }
 });
 
-const HLTV_API = 'https://hltv-api.vercel.app/api';
 const BALLDONTLIE_API = 'https://api.balldontlie.io';
-const CUTOFF_2020 = new Date('2020-01-01').getTime();
-
-async function fetchHltvEvents() {
-  const [matchesRes, resultsRes] = await Promise.all([
-    fetch(`${HLTV_API}/matches.json`),
-    fetch(`${HLTV_API}/results.json`)
-  ]);
-  const matches = await matchesRes.json().catch(() => []);
-  const results = await resultsRes.json().catch(() => []);
-
-  const eventsMap = new Map();
-  const addMatch = (m) => {
-    const name = m.event?.name;
-    if (!name) return;
-    const time = m.time ? new Date(m.time).getTime() : 0;
-    if (!time) return;
-    if (!eventsMap.has(name)) {
-      eventsMap.set(name, { name, logo: m.event?.logo || '', startDate: time, endDate: time, matchCount: 0 });
-    }
-    const e = eventsMap.get(name);
-    e.startDate = Math.min(e.startDate, time);
-    e.endDate = Math.max(e.endDate, time);
-    e.matchCount++;
-  };
-  matches.forEach(addMatch);
-  results.forEach(addMatch);
-
-  return Array.from(eventsMap.values())
-    .filter((e) => e.startDate >= CUTOFF_2020)
-    .map((e) => ({ name: e.name, logo: e.logo, startDate: e.startDate, endDate: e.endDate, matchCount: e.matchCount }))
-    .sort((a, b) => a.startDate - b.startDate)
-    .slice(0, 50);
-}
+const CUTOFF_2026 = new Date('2026-01-01').getTime();
 
 async function fetchBalldontlieEvents() {
-  if (!BALLDONTLIE_API_KEY) return null;
+  if (!BALLDONTLIE_API_KEY) return [];
   const all = [];
   let cursor = null;
   for (let i = 0; i < 5; i++) {
@@ -261,7 +228,7 @@ async function fetchBalldontlieEvents() {
     const r = await fetch(url.toString(), {
       headers: { Authorization: BALLDONTLIE_API_KEY }
     });
-    if (!r.ok) return null;
+    if (!r.ok) return [];
     const data = await r.json().catch(() => null);
     if (!data?.data?.length) break;
     all.push(...data.data);
@@ -269,12 +236,11 @@ async function fetchBalldontlieEvents() {
     if (!cursor) break;
   }
   const now = Date.now();
-  const cutoff = now - 180 * 24 * 60 * 60 * 1000;
   return all
     .filter((t) => {
       const start = t.start_date ? new Date(t.start_date).getTime() : 0;
       const end = t.end_date ? new Date(t.end_date).getTime() : start;
-      return end >= cutoff && start > 0;
+      return start >= CUTOFF_2026 && end >= now;
     })
     .map((t) => ({
       name: t.name,
@@ -292,16 +258,10 @@ async function fetchBalldontlieEvents() {
 
 app.get('/api/calendar/events', async (req, res) => {
   try {
-    let events = await fetchBalldontlieEvents();
-    if (!events?.length) events = await fetchHltvEvents();
-    res.json({ success: true, events: events || [], source: events?.length ? 'balldontlie' : 'hltv' });
+    const events = await fetchBalldontlieEvents();
+    res.json({ success: true, events: events || [], source: 'balldontlie' });
   } catch (e) {
-    try {
-      const events = await fetchHltvEvents();
-      res.json({ success: true, events, source: 'hltv' });
-    } catch (e2) {
-      res.json({ success: false, events: [] });
-    }
+    res.json({ success: false, events: [] });
   }
 });
 
@@ -309,5 +269,5 @@ app.listen(PORT, () => {
   console.log(`Sakura CS2: http://localhost:${PORT}`);
   if (!STEAM_API_KEY) console.warn('⚠️  STEAM_API_KEY не задан!');
   if (!FACEIT_API_KEY) console.warn('⚠️  FACEIT_API_KEY не задан — Faceit fallback недоступен.');
-  if (!BALLDONTLIE_API_KEY) console.warn('⚠️  BALLDONTLIE_API_KEY не задан — календарь использует HLTV.');
+  if (!BALLDONTLIE_API_KEY) console.warn('⚠️  BALLDONTLIE_API_KEY не задан — турниры недоступны.');
 });
